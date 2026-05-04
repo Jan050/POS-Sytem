@@ -38,6 +38,7 @@ if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
 connectDB()
 
 const app = express()
+app.set('trust proxy', 1) // Trust Render's proxy for accurate IP detection
 
 // ── 1. Helmet — secure HTTP headers ───────────────────────────────────────
 // Sets: X-Frame-Options, X-Content-Type-Options, Strict-Transport-Security,
