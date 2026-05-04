@@ -3,7 +3,9 @@ import axios from 'axios'
 const TOKEN_KEY = 'pos_token'
 
 const api = axios.create({
-  baseURL: '/api',
+  // Dev: VITE_API_URL is unset → uses Vite proxy → '/api' works
+  // Prod (Vercel): VITE_API_URL = 'https://pos-sytem.onrender.com' → full URL
+  baseURL: `${import.meta.env.VITE_API_URL || ''}/api`,
   timeout: 12000,
   headers: { 'Content-Type': 'application/json' },
 })
