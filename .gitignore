@@ -1,0 +1,101 @@
+# =========================
+# 🔒 ENVIRONMENT VARIABLES (NEVER COMMIT)
+# =========================
+.env
+.env.*
+*.env
+!.env.example
+
+# =========================
+# 📦 NODE DEPENDENCIES
+# =========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# =========================
+# 🏗️ BUILD OUTPUTS
+# =========================
+dist/
+build/
+.next/
+out/
+
+# =========================
+# ⚙️ CACHE & TEMP FILES
+# =========================
+.cache/
+.temp/
+.tmp/
+*.tmp
+
+# =========================
+# 🧾 LOG FILES
+# =========================
+logs/
+*.log
+
+# =========================
+# 💾 DATABASE FILES
+# =========================
+*.db
+*.sqlite
+*.sqlite3
+
+# =========================
+# 🔐 SECURITY / KEYS
+# =========================
+*.pem
+*.key
+*.crt
+
+# =========================
+# 🖥️ OS FILES
+# =========================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# =========================
+# 🧑‍💻 IDE / EDITOR FILES
+# =========================
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# =========================
+# 🧪 TEST COVERAGE
+# =========================
+coverage/
+
+# =========================
+# 📸 UPLOADS (OPTIONAL)
+# =========================
+uploads/
+public/uploads/
+
+# =========================
+# 🔄 FRONTEND (VITE, LOCAL CONFIG)
+# =========================
+vite.config.ts.timestamp-*
+*.local
+
+# =========================
+# 🚀 DEPLOYMENT FILES
+# =========================
+.vercel/
+.netlify/
+.env.production.local
+.env.development.local
+
+# =========================
+# 🧩 MISC
+# =========================
+*.bak
+*.lock
