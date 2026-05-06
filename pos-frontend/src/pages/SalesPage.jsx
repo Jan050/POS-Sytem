@@ -16,6 +16,7 @@ import {
 import { salesApi, orderApi } from '../api'
 import { useToast } from '../components/ui/Toast'
 import Modal from '../components/ui/Modal'
+import ConfirmDialog from '../components/ui/ConfirmDialog'
 import { StatCardSkeleton, ChartSkeleton, RowSkeleton, BestSellerSkeleton } from '../components/ui/Skeleton'
 import { formatPeso, formatDateTime, shortId } from '../utils/formatters'
 import { printReceipt } from '../utils/printReceipt'
@@ -99,6 +100,10 @@ export default function SalesPage() {
   const [bestSellers,    setBestSellers]    = useState([])
   const [orders,         setOrders]         = useState([])
   const [selectedOrder,  setSelectedOrder]  = useState(null)
+  const [voidTarget,     setVoidTarget]     = useState(null)
+  const [voidReason,     setVoidReason]     = useState('')
+  const [voidError,      setVoidError]      = useState('')
+  const [voidSaving,     setVoidSaving]     = useState(false)
 
   // Granular skeleton: each section loads independently
   const [loadingStats,  setLoadingStats]  = useState(true)
@@ -138,6 +143,18 @@ export default function SalesPage() {
     } catch { toast('Failed to load orders', 'error') }
     finally { setLoadingOrders(false) }
   }, [])
+
+  const handleVoid = async () => {
+    if (!voidReason.trim()) return setVoidError('A reason is required to void an order')
+    setVoidSaving(true); setVoidError('')
+    try {
+      await orderApi.void(voidTarget._id, { reason: voidReason.trim() })
+      toast('Order voided and stock restored', 'success')
+      setVoidTarget(null); setVoidReason(''); setSelectedOrder(null)
+      fetchOrders(); fetchTodayStats()
+    } catch (err) { setVoidError(err.message) }
+    finally { setVoidSaving(false) }
+  }
 
   useEffect(() => { fetchTodayStats(); fetchOrders() }, [fetchTodayStats, fetchOrders])
   useEffect(() => { fetchPeriodData(period) }, [period, fetchPeriodData])
@@ -427,8 +444,54 @@ export default function SalesPage() {
                 </svg>
                 Reprint
               </button>
-              <button onClick={() => setSelectedOrder(null)} className="btn btn-secondary flex-1 py-2.5 text-sm">
-                Close
+              {selectedOrder?.status !== 'voided' && (
+                <button
+                  onClick={() => { setVoidTarget(selectedOrder); setVoidReason(''); setVoidError('') }}
+                  className="btn btn-danger px-3 py-2.5 text-sm" title="Void this order"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                  </svg>
+                </button>
+              )}
+              <button onClick={() => setSelectedOrder(null)} className="btn btn-secondary px-3 py-2.5 text-sm">Close</button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Void Order Modal */}
+      <Modal isOpen={!!voidTarget} onClose={() => { setVoidTarget(null); setVoidError('') }} title="Void Order" size="sm">
+        {voidTarget && (
+          <div className="space-y-4">
+            <div className="bg-red-900/20 border border-red-700/40 rounded-xl p-3 text-sm">
+              <p className="text-red-300 font-semibold">Warning — this will:</p>
+              <ul className="text-red-400/80 text-xs mt-1.5 space-y-0.5 list-disc list-inside">
+                <li>Mark order #{shortId(voidTarget._id)} as voided</li>
+                <li>Restore stock for all items</li>
+                <li>Remove from today's sales total</li>
+              </ul>
+            </div>
+            {voidError && <p className="text-red-400 text-sm bg-red-900/20 rounded-lg px-3 py-2">{voidError}</p>}
+            <div>
+              <label className="text-xs text-slate-400 block mb-1.5">Reason for voiding *</label>
+              <input type="text" value={voidReason}
+                onChange={(e) => { setVoidReason(e.target.value); setVoidError('') }}
+                placeholder="e.g. Customer changed mind" className="input px-3 py-2.5" autoFocus maxLength={300} />
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              {["Customer changed mind","Wrong items","Duplicate order","Test order"].map((r) => (
+                <button key={r} onClick={() => setVoidReason(r)}
+                  className={`text-xs px-2.5 py-1.5 rounded-lg transition-colors
+                    ${voidReason === r ? "bg-red-700 text-white" : "bg-surface-600 text-slate-300 hover:bg-surface-500"}`}>
+                  {r}
+                </button>
+              ))}
+            </div>
+            <div className="flex gap-3 pt-1">
+              <button onClick={() => setVoidTarget(null)} className="btn btn-secondary flex-1 py-2.5">Cancel</button>
+              <button onClick={handleVoid} disabled={voidSaving} className="btn btn-danger flex-1 py-2.5 font-semibold">
+                {voidSaving ? "Voiding…" : "Confirm Void"}
               </button>
             </div>
           </div>
