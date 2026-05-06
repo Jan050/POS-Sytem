@@ -11,7 +11,7 @@ const CATEGORIES = [
 ]
 
 const emptyForm = {
-  name: '', price: '', stock: '', barcode: '', category: 'Beverages',
+  name: '', price: '', stock: '', barcode: '', category: 'Beverages', lowStockThreshold: '5',
 }
 
 export default function ProductsPage() {
@@ -31,11 +31,24 @@ export default function ProductsPage() {
   // Delete confirm
   const [deleteTarget, setDeleteTarget] = useState(null)
 
+  // ── Phase 1: Restock ──────────────────────────────────
+  const [restockTarget, setRestockTarget]   = useState(null)
+  const [restockQty,    setRestockQty]      = useState('')
+  const [restockError,  setRestockError]    = useState('')
+  const [restockSaving, setRestockSaving]   = useState(false)
+
+  // ── Phase 1: Low stock alert count ───────────────────
+  const [lowStockCount, setLowStockCount] = useState(0)
+
   // ── Load ──────────────────────────────────────────
   const loadProducts = useCallback(async () => {
     try {
-      const res = await productApi.getAll()
-      setProducts(res.data || [])
+      const [prodRes, lowRes] = await Promise.all([
+        productApi.getAll(),
+        productApi.getLowStock(),
+      ])
+      setProducts(prodRes.data || [])
+      setLowStockCount(lowRes.count || 0)
     } catch {
       toast('Failed to load products', 'error')
     } finally {
@@ -69,6 +82,7 @@ export default function ProductsPage() {
       stock: product.stock.toString(),
       barcode: product.barcode || '',
       category: product.category || 'Beverages',
+      lowStockThreshold: (product.lowStockThreshold ?? 5).toString(),
     })
     setFormError('')
     setShowForm(true)
@@ -96,6 +110,7 @@ export default function ProductsPage() {
         stock: parseInt(form.stock) || 0,
         barcode: form.barcode.trim() || null,
         category: form.category,
+        lowStockThreshold: parseInt(form.lowStockThreshold) >= 0 ? parseInt(form.lowStockThreshold) : 5,
       }
 
       if (editingProduct) {
@@ -123,6 +138,19 @@ export default function ProductsPage() {
     } catch (err) {
       toast(err.message, 'error')
     }
+  }
+
+  const handleRestock = async () => {
+    const qty = parseInt(restockQty)
+    if (!Number.isInteger(qty) || qty === 0) return setRestockError('Enter a non-zero quantity')
+    setRestockSaving(true); setRestockError('')
+    try {
+      const res = await productApi.restock(restockTarget._id, { quantity: qty })
+      toast(res.message, 'success')
+      setRestockTarget(null); setRestockQty('')
+      loadProducts()
+    } catch (err) { setRestockError(err.message) }
+    finally { setRestockSaving(false) }
   }
 
   // Unique categories for filter
@@ -227,27 +255,27 @@ export default function ProductsPage() {
                   </td>
                   <td className="px-3 py-3.5 text-right">
                     <span className={`font-mono text-sm font-semibold ${
-                      product.stock === 0 ? 'text-red-400' :
-                      product.stock <= 5  ? 'text-orange-400' :
-                                            'text-slate-300'
+                      product.stock === 0                                         ? 'text-red-400' :
+                      product.stock <= (product.lowStockThreshold ?? 5)          ? 'text-orange-400' :
+                                                                                   'text-slate-300'
                     }`}>
                       {product.stock}
+                      {product.stock <= (product.lowStockThreshold ?? 5) && product.stock > 0 && (
+                        <span className="ml-1 text-[10px] text-orange-500">low</span>
+                      )}
                     </span>
                   </td>
                   <td className="px-4 md:px-6 py-3.5">
                     <div className="flex items-center gap-1.5 justify-end">
                       <button
-                        onClick={() => openEdit(product)}
-                        className="btn btn-secondary px-2.5 py-1.5 text-xs"
+                        onClick={() => { setRestockTarget(product); setRestockQty(''); setRestockError('') }}
+                        className="btn btn-secondary px-2.5 py-1.5 text-xs text-green-400 hover:text-green-300"
+                        title="Restock"
                       >
-                        Edit
+                        +Stock
                       </button>
-                      <button
-                        onClick={() => setDeleteTarget(product)}
-                        className="btn btn-danger px-2.5 py-1.5 text-xs"
-                      >
-                        Del
-                      </button>
+                      <button onClick={() => openEdit(product)} className="btn btn-secondary px-2.5 py-1.5 text-xs">Edit</button>
+                      <button onClick={() => setDeleteTarget(product)} className="btn btn-danger px-2.5 py-1.5 text-xs">Del</button>
                     </div>
                   </td>
                 </tr>
@@ -340,22 +368,72 @@ export default function ProductsPage() {
             />
           </div>
 
+          <div>
+            <label className="block text-xs text-slate-400 mb-1.5 font-medium">
+              Low Stock Alert Threshold
+              <span className="text-slate-600 font-normal ml-1">(alert when stock ≤ this)</span>
+            </label>
+            <input
+              name="lowStockThreshold"
+              type="number"
+              min="0"
+              value={form.lowStockThreshold}
+              onChange={handleFormChange}
+              placeholder="5"
+              className="input px-3 py-2.5 font-mono"
+            />
+          </div>
+
           <div className="flex gap-3 pt-2">
-            <button
-              onClick={() => setShowForm(false)}
-              className="btn btn-secondary flex-1 py-2.5"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="btn-primary flex-1 py-2.5 font-semibold"
-            >
+            <button onClick={() => setShowForm(false)} className="btn btn-secondary flex-1 py-2.5">Cancel</button>
+            <button onClick={handleSave} disabled={saving} className="btn-primary flex-1 py-2.5 font-semibold">
               {saving ? 'Saving…' : editingProduct ? 'Save Changes' : 'Add Product'}
             </button>
           </div>
         </div>
+      </Modal>
+
+      {/* ── Restock Modal ─────────────────────────────── */}
+      <Modal isOpen={!!restockTarget} onClose={() => { setRestockTarget(null); setRestockError('') }}
+        title={`Restock: ${restockTarget?.name}`} size="sm">
+        {restockTarget && (
+          <div className="space-y-4">
+            <div className="card p-3 bg-surface-900 flex items-center justify-between text-sm">
+              <span className="text-slate-400">Current stock</span>
+              <span className="font-mono font-bold text-slate-100">{restockTarget.stock} units</span>
+            </div>
+            {restockError && <p className="text-red-400 text-sm bg-red-900/20 rounded-lg px-3 py-2">{restockError}</p>}
+            <div>
+              <label className="text-xs text-slate-400 block mb-1.5">
+                Quantity to Add <span className="text-slate-600">(use negative to remove)</span>
+              </label>
+              <input type="number" value={restockQty}
+                onChange={(e) => { setRestockQty(e.target.value); setRestockError('') }}
+                placeholder="e.g. 24" className="input px-3 py-2.5 text-xl font-mono font-bold" autoFocus />
+            </div>
+            {restockQty && !isNaN(parseInt(restockQty)) && (
+              <div className="bg-surface-700/50 rounded-xl px-3 py-2 text-sm flex justify-between">
+                <span className="text-slate-400">New stock will be</span>
+                <span className="font-mono font-bold text-amber-400">{restockTarget.stock + parseInt(restockQty)} units</span>
+              </div>
+            )}
+            <div className="flex gap-2 flex-wrap">
+              {[6, 12, 24, 36, 48].map((v) => (
+                <button key={v} onClick={() => setRestockQty(v.toString())}
+                  className={`text-xs px-3 py-1.5 rounded-lg font-mono transition-colors
+                    ${restockQty === v.toString() ? 'bg-amber-500 text-slate-900 font-bold' : 'bg-surface-600 text-slate-300 hover:bg-surface-500'}`}>
+                  +{v}
+                </button>
+              ))}
+            </div>
+            <div className="flex gap-3 pt-1">
+              <button onClick={() => setRestockTarget(null)} className="btn btn-secondary flex-1 py-2.5">Cancel</button>
+              <button onClick={handleRestock} disabled={restockSaving} className="btn-primary flex-1 py-2.5 font-semibold">
+                {restockSaving ? 'Saving…' : 'Update Stock'}
+              </button>
+            </div>
+          </div>
+        )}
       </Modal>
 
       {/* ── Delete Confirm ───────────────────────── */}
