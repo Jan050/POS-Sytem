@@ -18,28 +18,34 @@ const productSchema = new mongoose.Schema(
       min: [0, "Stock cannot be negative"],
       default: 0,
     },
+    // ── Phase 1: Low Stock Alert threshold ──────────────────────────────────
+    // When stock drops to or below this number, the product appears in alerts.
+    lowStockThreshold: {
+      type: Number,
+      default: 5,
+      min: [0, "Threshold cannot be negative"],
+    },
     barcode: {
       type: String,
       trim: true,
-      default: null, // Optional — for future barcode scanner support
+      default: null,
     },
     category: {
       type: String,
       trim: true,
-      default: "Uncategorized", // e.g. "Beverages", "Snacks", "Canned Goods"
+      default: "Uncategorized",
     },
     isActive: {
       type: Boolean,
-      default: true, // Soft-delete: hide without removing from DB
+      default: true,
     },
   },
-  {
-    timestamps: true, // Adds createdAt and updatedAt automatically
-  }
+  { timestamps: true }
 );
 
-// Index barcode for fast lookup during scanning
 productSchema.index({ barcode: 1 });
-productSchema.index({ name: "text" }); // Enables text search on name
+productSchema.index({ name: "text" });
+// Index for fast low-stock queries
+productSchema.index({ stock: 1, isActive: 1 });
 
 module.exports = mongoose.model("Product", productSchema);
