@@ -83,4 +83,34 @@ export const salesApi = {
   getHourly:     (date)          => api.get('/sales/hourly', { params: { date } }),
 }
 
+// ════════════════════════════════════════
+// EXPENSES
+// ════════════════════════════════════════
+export const expenseApi = {
+  getAll:       (params = {}) => api.get('/expenses', { params }),
+  getCategories:()            => api.get('/expenses/categories'),
+  create:       (data)        => api.post('/expenses', data),
+  delete:       (id)          => api.delete(`/expenses/${id}`),
+}
+
+// ════════════════════════════════════════
+// CASH DRAWER
+// ════════════════════════════════════════
+export const cashDrawerApi = {
+  getCurrent: ()         => api.get('/cash-drawer/current'),
+  getHistory: (params={})=> api.get('/cash-drawer', { params }),
+  open:       (data)     => api.post('/cash-drawer/open', data),
+  close:      (id, data) => api.put(`/cash-drawer/${id}/close`, data),
+}
+
+// ════════════════════════════════════════
+// UTANG
+// ════════════════════════════════════════
+export const utangApi = {
+  getAll:       (params = {}) => api.get('/utang', { params }),
+  create:       (data)        => api.post('/utang', data),
+  recordPayment:(id, data)    => api.put(`/utang/${id}/pay`, data),
+  delete:       (id)          => api.delete(`/utang/${id}`),
+}
+
 export default api
