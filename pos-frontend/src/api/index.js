@@ -57,11 +57,13 @@ export const authApi = {
 // PRODUCTS
 // ════════════════════════════════════════
 export const productApi = {
-  getAll:   (params = {}) => api.get('/products', { params }),
-  getById:  (id)          => api.get(`/products/${id}`),
-  create:   (data)        => api.post('/products', data),
-  update:   (id, data)    => api.put(`/products/${id}`, data),
-  delete:   (id)          => api.delete(`/products/${id}`),
+  getAll:    (params = {}) => api.get('/products', { params }),
+  getById:   (id)          => api.get(`/products/${id}`),
+  getLowStock:()           => api.get('/products/low-stock'),
+  restock:   (id, data)    => api.post(`/products/${id}/restock`, data),
+  create:    (data)        => api.post('/products', data),
+  update:    (id, data)    => api.put(`/products/${id}`, data),
+  delete:    (id)          => api.delete(`/products/${id}`),
 }
 
 // ════════════════════════════════════════
@@ -71,6 +73,7 @@ export const orderApi = {
   create:   (data)        => api.post('/orders', data),
   getAll:   (params = {}) => api.get('/orders', { params }),
   getById:  (id)          => api.get(`/orders/${id}`),
+  void:     (id, data)    => api.put(`/orders/${id}/void`, data),
 }
 
 // ════════════════════════════════════════
