@@ -1,5 +1,3 @@
-// POSPage.jsx
-
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { productApi, orderApi } from '../api'
 import { holdOrderApi } from '../api'
@@ -467,110 +465,56 @@ export default function POSPage() {
     }
   }
 
-  return (
-    <div className="flex h-full overflow-hidden">
+return (
+  <div className="flex h-full overflow-hidden">
 
-      {/* ── PRODUCT SECTION ─────────────────────────── */}
+    {/* ── PRODUCT SECTION ─────────────────────────── */}
+    <div className="flex-1 flex flex-col overflow-hidden p-4">
 
-      <div className="flex-1 flex flex-col overflow-hidden">
+      {/* Search + Category + Price Toggle */}
+      <div className="flex flex-wrap items-center gap-2 mb-4">
 
-        {/* Search + Category + Price Toggle */}
-        <div className="flex flex-wrap items-center gap-2 mb-4">
+        {/* Search */}
+        <input
+          ref={searchRef}
+          type="text"
+          placeholder="Search product or scan barcode..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="input flex-1 min-w-[220px]"
+        />
 
-          {/* Search */}
-          <input
-            ref={searchRef}
-            type="text"
-            placeholder="Search product or scan barcode..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="input flex-1 min-w-[220px]"
-          />
-
-          {/* Categories */}
-          <div className="flex gap-1 overflow-x-auto">
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setActiveCategory(cat)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all
-                  ${
-                    activeCategory === cat
-                      ? 'bg-amber-500 text-slate-900'
-                      : 'bg-surface-700 text-slate-300 hover:bg-surface-600'
-                  }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-
-          {/* ── PRICE LEVEL TOGGLE ───────────────── */}
-          <div className="flex bg-surface-700 rounded-xl p-1 gap-0.5 shrink-0">
-            {[
-              { key: 'retail', label: '🏷️ Retail' },
-              { key: 'wholesale', label: '📦 Wholesale' },
-            ].map(({ key, label }) => (
-              <button
-                key={key}
-                onClick={() => setPriceLevel(key)}
-                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all
-                  ${
-                    priceLevel === key
-                      ? 'bg-amber-500 text-slate-900'
-                      : 'text-slate-400 hover:text-slate-200'
-                  }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Product Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 overflow-y-auto">
-
-          {filtered.map((product) => (
-            <ProductCard
-              key={product._id}
-              product={product}
-
-              onAdd={(p) =>
-                addToCart(
-                  p,
-                  priceLevel === 'wholesale' &&
-                    p.wholesalePrice != null
-                    ? p.wholesalePrice
-                    : null
-                )
-              }
-
-              isQuick={quickIds.includes(product._id)}
-              onToggleQuick={() => toggleQuick(product._id)}
-            />
+        {/* Categories */}
+        <div className="flex gap-1 overflow-x-auto">
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(cat)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all
+                ${
+                  activeCategory === cat
+                    ? 'bg-amber-500 text-slate-900'
+                    : 'bg-surface-700 text-slate-300 hover:bg-surface-600'
+                }`}
+            >
+              {cat}
+            </button>
           ))}
-
         </div>
-      </div>
 
-      {/* ── PAYMENT SECTION ─────────────────────────── */}
-      <div>
-        {/* Payment mode tabs */}
-        <div className="flex bg-surface-700 rounded-xl p-1 gap-0.5 mb-3">
+        {/* Price Toggle */}
+        <div className="flex bg-surface-700 rounded-xl p-1 gap-0.5 shrink-0">
           {[
-            { key: 'cash', label: '💵 Cash' },
-            { key: 'split', label: '💳 Split / GCash' },
+            { key: 'retail', label: '🏷️ Retail' },
+            { key: 'wholesale', label: '📦 Wholesale' },
           ].map(({ key, label }) => (
             <button
               key={key}
-              onClick={() => {
-                setPaymentMode(key)
-                setCashError('')
-              }}
-              className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all
+              onClick={() => setPriceLevel(key)}
+              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all
                 ${
-                  paymentMode === key
-                    ? 'bg-amber-500 text-slate-900 shadow-sm'
+                  priceLevel === key
+                    ? 'bg-amber-500 text-slate-900'
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
             >
@@ -578,104 +522,152 @@ export default function POSPage() {
             </button>
           ))}
         </div>
-
-        {paymentMode === 'cash' ? (
-          <div>
-            <label className="text-xs text-slate-500 block mb-1">
-              Cash Received{' '}
-              <span className="text-red-400">*</span>
-            </label>
-
-            <div
-              className={`relative rounded-lg ${
-                cashError
-                  ? 'ring-1 ring-red-500'
-                  : ''
-              }`}
-            >
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-mono">
-                ₱
-              </span>
-
-              <input
-                type="number"
-                min="0"
-                step="1"
-                value={cash}
-                onChange={(e) => {
-                  setCash(e.target.value)
-                  setCashError('')
-                }}
-                placeholder="Enter cash amount"
-                className={`input pl-8 py-2.5 text-lg font-mono font-semibold text-slate-100 ${
-                  cashError ? 'border-red-500' : ''
-                }`}
-              />
-            </div>
-
-            {cashError && (
-              <p className="text-red-400 text-xs mt-1 flex items-center gap-1">
-                {cashError}
-              </p>
-            )}
-
-            <div className="flex gap-1.5 mt-2 flex-wrap">
-              {changePresets.map((preset) => (
-                <button
-                  key={preset}
-                  onClick={() => {
-                    setCash(preset.toString())
-                    setCashError('')
-                  }}
-                  className={`text-xs px-2 py-1 rounded-lg transition-colors font-mono
-                    ${
-                      Number(cash) === preset
-                        ? 'bg-amber-500 text-slate-900 font-semibold'
-                        : 'bg-surface-600 text-slate-300 hover:bg-surface-500'
-                    }`}
-                >
-                  ₱{preset}
-                </button>
-              ))}
-
-              <button
-                onClick={() => {
-                  setCash(total.toFixed(2))
-                  setCashError('')
-                }}
-                className="text-xs px-2 py-1 rounded-lg bg-surface-600 text-slate-300 hover:bg-surface-500 transition-colors"
-              >
-                Exact
-              </button>
-            </div>
-          </div>
-        ) : (
-          <SplitPaymentPanel
-            total={total}
-            onChange={(payments, valid) => {
-              setSplitPayments(payments)
-              setSplitValid(valid)
-            }}
-          />
-        )}
       </div>
 
-      {/* Change */}
-      {paymentMode === 'cash' &&
-        change !== null && (
-          <div
-            className="bg-green-900/40 border border-green-700/50 rounded-xl px-3 py-2
-            flex items-center justify-between animate-slide-in"
+      {/* Product Grid */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
+
+          {filtered.map((product) => (
+            <ProductCard
+              key={product._id}
+              product={product}
+              onAdd={(p) =>
+                addToCart(
+                  p,
+                  priceLevel === 'wholesale' &&
+                  p.wholesalePrice != null
+                    ? p.wholesalePrice
+                    : null
+                )
+              }
+              isQuick={quickIds.includes(product._id)}
+              onToggleQuick={() => toggleQuick(product._id)}
+            />
+          ))}
+
+        </div>
+      </div>
+    </div>
+
+    {/* ── PAYMENT SECTION ─────────────────────────── */}
+    <div className="w-[340px] bg-surface-800 border-l border-surface-700 p-4 flex flex-col gap-4 overflow-y-auto">
+
+      {/* Payment mode tabs */}
+      <div className="flex bg-surface-700 rounded-xl p-1 gap-0.5">
+        {[
+          { key: 'cash', label: '💵 Cash' },
+          { key: 'split', label: '💳 Split / GCash' },
+        ].map(({ key, label }) => (
+          <button
+            key={key}
+            onClick={() => {
+              setPaymentMode(key)
+              setCashError('')
+            }}
+            className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all
+              ${
+                paymentMode === key
+                  ? 'bg-amber-500 text-slate-900 shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
           >
-            <span className="text-sm font-medium text-green-300">
-              Change
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* Cash / Split */}
+      {paymentMode === 'cash' ? (
+        <div>
+          <label className="text-xs text-slate-500 block mb-1">
+            Cash Received{' '}
+            <span className="text-red-400">*</span>
+          </label>
+
+          <div
+            className={`relative rounded-lg ${
+              cashError ? 'ring-1 ring-red-500' : ''
+            }`}
+          >
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-mono">
+              ₱
             </span>
 
-            <span className="font-mono font-bold text-lg text-green-400">
-              {formatPeso(change)}
-            </span>
+            <input
+              type="number"
+              min="0"
+              step="1"
+              value={cash}
+              onChange={(e) => {
+                setCash(e.target.value)
+                setCashError('')
+              }}
+              placeholder="Enter cash amount"
+              className={`input pl-8 py-2.5 text-lg font-mono font-semibold text-slate-100 ${
+                cashError ? 'border-red-500' : ''
+              }`}
+            />
           </div>
-        )}
+
+          {cashError && (
+            <p className="text-red-400 text-xs mt-1">
+              {cashError}
+            </p>
+          )}
+
+          <div className="flex gap-1.5 mt-2 flex-wrap">
+            {changePresets.map((preset) => (
+              <button
+                key={preset}
+                onClick={() => {
+                  setCash(preset.toString())
+                  setCashError('')
+                }}
+                className={`text-xs px-2 py-1 rounded-lg transition-colors font-mono
+                  ${
+                    Number(cash) === preset
+                      ? 'bg-amber-500 text-slate-900 font-semibold'
+                      : 'bg-surface-600 text-slate-300 hover:bg-surface-500'
+                  }`}
+              >
+                ₱{preset}
+              </button>
+            ))}
+
+            <button
+              onClick={() => {
+                setCash(total.toFixed(2))
+                setCashError('')
+              }}
+              className="text-xs px-2 py-1 rounded-lg bg-surface-600 text-slate-300 hover:bg-surface-500 transition-colors"
+            >
+              Exact
+            </button>
+          </div>
+        </div>
+      ) : (
+        <SplitPaymentPanel
+          total={total}
+          onChange={(payments, valid) => {
+            setSplitPayments(payments)
+            setSplitValid(valid)
+          }}
+        />
+      )}
+
+      {/* Change */}
+      {paymentMode === 'cash' && change !== null && (
+        <div className="bg-green-900/40 border border-green-700/50 rounded-xl px-3 py-2 flex items-center justify-between">
+          <span className="text-sm font-medium text-green-300">
+            Change
+          </span>
+
+          <span className="font-mono font-bold text-lg text-green-400">
+            {formatPeso(change)}
+          </span>
+        </div>
+      )}
 
       {/* Checkout */}
       <button
@@ -687,21 +679,23 @@ export default function POSPage() {
           ? 'Processing...'
           : 'Complete Order'}
       </button>
-
-      {/* Held Orders Drawer */}
-      <HeldOrdersDrawer
-        isOpen={showHeld}
-        onClose={() => setShowHeld(false)}
-        onResume={resumeHeldOrder}
-      />
-
-      {/* Hold Label Modal */}
-      <HoldLabelModal
-        isOpen={showHoldLabel}
-        onClose={() => setShowHoldLabel(false)}
-        onConfirm={holdCurrentCart}
-        itemCount={itemCount}
-      />
     </div>
-  )
+
+    {/* Held Orders Drawer */}
+    <HeldOrdersDrawer
+      isOpen={showHeld}
+      onClose={() => setShowHeld(false)}
+      onResume={resumeHeldOrder}
+    />
+
+    {/* Hold Label Modal */}
+    <HoldLabelModal
+      isOpen={showHoldLabel}
+      onClose={() => setShowHoldLabel(false)}
+      onConfirm={holdCurrentCart}
+      itemCount={itemCount}
+    />
+
+  </div>
+)
 }
