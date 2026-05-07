@@ -62,6 +62,22 @@ const orderSchema = new mongoose.Schema(
       default: "online",
     },
     soldAt: { type: Date, default: null },
+    
+    // ── Phase 2: Split / multi-method payment ─────────────────────────────────
+    payments: {
+      type: [
+    {
+      method: {
+        type: String,
+        enum: ["cash", "gcash", "maya", "card", "other"],
+        required: true,
+      },
+      amount: { type: Number, required: true, min: 0 },
+      reference: { type: String, default: "" },  // GCash ref number
+    },
+  ],
+  default: [],
+},
   },
   { timestamps: true }
 );

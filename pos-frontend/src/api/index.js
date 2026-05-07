@@ -116,4 +116,25 @@ export const utangApi = {
   delete:       (id)          => api.delete(`/utang/${id}`),
 }
 
+// ════════════════════════════════════════
+// HOLD ORDERS
+// ════════════════════════════════════════
+export const holdOrderApi = {
+  getAll:  ()         => api.get('/hold-orders'),
+  hold:    (data)     => api.post('/hold-orders', data),
+  delete:  (id)       => api.delete(`/hold-orders/${id}`),
+}
+
+// ════════════════════════════════════════
+// SUPPLIERS
+// ════════════════════════════════════════
+export const supplierApi = {
+  getAll:         ()         => api.get('/suppliers'),
+  create:         (data)     => api.post('/suppliers', data),
+  update:         (id, data) => api.put(`/suppliers/${id}`, data),
+  delete:         (id)       => api.delete(`/suppliers/${id}`),
+  getPurchases:   (p = {})   => api.get('/suppliers/purchases', { params: p }),
+  createPurchase: (data)     => api.post('/suppliers/purchases', data),
+}
+
 export default api
