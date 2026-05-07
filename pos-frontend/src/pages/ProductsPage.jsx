@@ -381,17 +381,17 @@ export default function ProductsPage() {
                       )}
                     </span>
                   </td>
-                  <td className="px-4 md:px-6 py-3.5">
-                    <div className="flex items-center gap-1.5 justify-end">
+                  <td className="px-2 md:px-6 py-3.5">
+                    <div className="flex flex-col sm:flex-row items-end sm:items-center gap-1 justify-end">
                       <button
                         onClick={() => { setRestockTarget(product); setRestockQty(''); setRestockError('') }}
-                        className="btn btn-secondary px-2.5 py-1.5 text-xs text-green-400 hover:text-green-300"
+                        className="btn btn-secondary px-2 py-1 text-xs text-green-400 hover:text-green-300 w-full sm:w-auto"
                         title="Restock"
                       >
                         +Stock
                       </button>
-                      <button onClick={() => openEdit(product)} className="btn btn-secondary px-2.5 py-1.5 text-xs">Edit</button>
-                      <button onClick={() => setDeleteTarget(product)} className="btn btn-danger px-2.5 py-1.5 text-xs">Del</button>
+                      <button onClick={() => openEdit(product)} className="btn btn-secondary px-2 py-1 text-xs w-full sm:w-auto">Edit</button>
+                      <button onClick={() => setDeleteTarget(product)} className="btn btn-danger px-2 py-1 text-xs w-full sm:w-auto">Del</button>
                     </div>
                   </td>
                 </tr>
@@ -622,7 +622,7 @@ export default function ProductsPage() {
       <Modal isOpen={!!restockTarget} onClose={() => { setRestockTarget(null); setRestockError('') }}
         title={`Restock: ${restockTarget?.name}`} size="sm">
         {restockTarget && (
-          <div className="space-y-4">
+          <div className="space-y-4 overflow-y-auto max-h-[75vh] pr-1">
             <div className="card p-3 bg-surface-900 flex items-center justify-between text-sm">
               <span className="text-slate-400">Current stock</span>
               <span className="font-mono font-bold text-slate-100">{restockTarget.stock} units</span>
