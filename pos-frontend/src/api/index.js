@@ -80,10 +80,14 @@ export const orderApi = {
 // SALES
 // ════════════════════════════════════════
 export const salesApi = {
-  getToday:      ()              => api.get('/sales/today'),
-  getSummary:    (period = '7days') => api.get('/sales/summary', { params: { period } }),
-  getBestSellers:(period = '7days', limit = 10) => api.get('/sales/best-sellers', { params: { period, limit } }),
-  getHourly:     (date)          => api.get('/sales/hourly', { params: { date } }),
+  getToday:         ()                    => api.get('/sales/today'),
+  getSummary:       (period = '7days')    => api.get('/sales/summary', { params: { period } }),
+  getBestSellers:   (period = '7days', limit = 10) => api.get('/sales/best-sellers', { params: { period, limit } }),
+  getHourly:        (date)               => api.get('/sales/hourly', { params: { date } }),
+  // ── Phase 3 ──────────────────────────────────────────────────────────────
+  getMonthly:       ()                   => api.get('/sales/monthly'),
+  getDeadStock:     (days = 30)          => api.get('/sales/dead-stock', { params: { days } }),
+  getProfitMargins: (period = '30days')  => api.get('/sales/profit-margins', { params: { period } }),
 }
 
 // ════════════════════════════════════════
