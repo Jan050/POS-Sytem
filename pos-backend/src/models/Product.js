@@ -14,6 +14,14 @@ const productSchema = new mongoose.Schema(
       required: [true, "Price is required"],
       min: [0, "Price cannot be negative"],
     },
+    // ── Phase 3: Cost price for profit margin calculations ──────────────────────
+    // The purchase/wholesale price paid to the supplier.
+    // When set, enables profit margin reports.
+    costPrice: {
+      type: Number,
+      default: null,
+      min: [0, "Cost price cannot be negative"],
+    },
 
     // ── Phase 2: Wholesale price ─────────────────────────────────────────────
     // When set, cashier can toggle between retail and wholesale price.
