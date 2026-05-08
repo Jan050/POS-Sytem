@@ -7,7 +7,7 @@ const getProducts = async (req, res) => {
   try {
     const { search, category } = req.query;
     const filter = { isActive: true };
-
+Product.create
     if (search) {
       const escaped = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       filter.$or = [
@@ -171,10 +171,11 @@ const createProduct = async (req, res) => {
       stock: parseInt(stock) || 0,
       barcode: barcode?.trim() || null,
       category: category || "Uncategorized",
+      costPrice: costPrice != null ? parseFloat(costPrice) : null,
       lowStockThreshold:
         parseInt(lowStockThreshold) >= 0
           ? parseInt(lowStockThreshold)
-          : 5,
+          : 5,  
 
       imageUrl: imageUrl?.trim() || null,
 
@@ -249,6 +250,7 @@ const updateProduct = async (req, res) => {
     if (stock !== undefined) update.stock = parseInt(stock);
     if (barcode !== undefined) update.barcode = barcode?.trim() || null;
     if (category !== undefined) update.category = category;
+    if (costPrice !== undefined) update.costPrice = costPrice != null ? parseFloat(costPrice) : null;
 
     if (lowStockThreshold !== undefined) {
       update.lowStockThreshold = parseInt(lowStockThreshold);
