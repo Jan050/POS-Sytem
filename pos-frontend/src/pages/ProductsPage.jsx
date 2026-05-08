@@ -20,6 +20,7 @@ const emptyForm = {
   wholesalePrice: '',
   wholesaleMinQty: '1',
   imageUrl: '',
+  costPrice: '',
 }
 
 export default function ProductsPage() {
@@ -98,6 +99,7 @@ export default function ProductsPage() {
       stock: product.stock.toString(),
       barcode: product.barcode || '',
       category: product.category || 'Beverages',
+      costPrice: product.costPrice != null ? product.costPrice.toString() : '',
 
       lowStockThreshold:
         (product.lowStockThreshold ?? 5).toString(),
@@ -180,6 +182,7 @@ export default function ProductsPage() {
         stock: parseInt(form.stock) || 0,
         barcode: form.barcode.trim() || null,
         category: form.category,
+        costPrice: form.costPrice !== '' ? parseFloat(form.costPrice) : null,
 
         lowStockThreshold:
           parseInt(form.lowStockThreshold) >= 0
@@ -472,6 +475,24 @@ export default function ProductsPage() {
                 className="input px-3 py-2.5 font-mono"
               />
             </div>
+          </div>
+
+          {/* Cost Price (for margin reports) */}
+          <div>
+            <label className="block text-xs text-slate-400 mb-1.5 font-medium">
+              Cost Price (₱){' '}
+              <span className="text-slate-600">— for profit reports</span>
+            </label>
+            <input
+              name="costPrice"
+              type="number"
+              step="0.01"
+              min="0"
+              value={form.costPrice}
+              onChange={handleFormChange}
+              placeholder="e.g. 14.00"
+              className="input px-3 py-2.5 font-mono"
+            />
           </div>
 
           {/* Category */}
