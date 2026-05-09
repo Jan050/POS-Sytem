@@ -141,4 +141,20 @@ export const supplierApi = {
   createPurchase: (data)     => api.post('/suppliers/purchases', data),
 }
 
+// ════════════════════════════════════════
+// BACKUP & RESTORE
+// ════════════════════════════════════════
+export const backupApi = {
+  export:          ()     => api.get('/backup/export'),
+  restoreProducts: (data) => api.post('/backup/restore-products', data),
+}
+
+// ════════════════════════════════════════
+// AUDIT LOGS
+// ════════════════════════════════════════
+export const auditApi = {
+  getLogs:  (params = {}) => api.get('/audit/logs',  { params }),
+  getDates: ()             => api.get('/audit/dates'),
+}
+
 export default api
