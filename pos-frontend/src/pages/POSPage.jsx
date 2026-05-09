@@ -13,8 +13,11 @@ import { formatPeso } from '../utils/formatters'
 import HeldOrdersDrawer from '../components/HeldOrdersDrawer'
 import HoldLabelModal from '../components/HoldLabelModal'
 import SplitPaymentPanel from '../components/SplitPaymentPanel'
+import { enqueueOrder, saveLocalOrder } from '../utils/offlineDB'
+import { useSync } from '../context/SyncContext'
 
 const QUICK_ITEM_KEY = 'pos_quick_items'
+const { refreshCount } = useSync()
 const loadQuickIds = () => { try { return JSON.parse(localStorage.getItem(QUICK_ITEM_KEY)) || [] } catch { return [] } }
 const saveQuickIds = (ids) => localStorage.setItem(QUICK_ITEM_KEY, JSON.stringify(ids))
 
@@ -225,36 +228,64 @@ export default function POSPage() {
   }, [clearCart, addToCart])
 
   // ── Checkout ─────────────────────────────────────────────────────────────
-  const handleCheckout = useCallback(async () => {
-    if (paymentMode === 'cash') {
-      const validation = validateCashInput(cash, total)
-      if (!validation.valid) { setCashError(validation.message); return toast(validation.message, 'error') }
-    } else {
-      if (!splitValid) return toast('Please complete the payment breakdown', 'error')
-    }
+  // Replace handleCheckout with:
+const handleCheckout = useCallback(async () => {
+  if (paymentMode === 'cash') {
+    const validation = validateCashInput(cash, total)
+    if (!validation.valid) { setCashError(validation.message); return toast(validation.message, 'error') }
+  } else {
+    if (!splitValid) return toast('Please complete the payment breakdown', 'error')
+  }
 
-    setCheckoutLoading(true)
-    setCashError('')
+  setCheckoutLoading(true)
+  setCashError('')
+
+  const localId = (crypto.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`)
+
+  const payload = {
+    localId,
+    items: cart.map((item) => ({
+      productId: item.isCustom ? undefined : item._id,
+      name:      item.name,
+      price:     item.price,
+      quantity:  item.quantity,
+      isCustom:  item.isCustom || false,
+    })),
+    ...(paymentMode === 'split'
+      ? { payments: splitPayments, cash: splitPayments.find((p) => p.method === 'cash')?.amount || 0 }
+      : { cash: Number(cash) }
+    ),
+    discount: discountType !== 'none' && discountValue
+      ? { type: discountType, value: parseFloat(discountValue) }
+      : null,
+  }
+
+  // ── OFFLINE path ────────────────────────────────────────────────────────
+  if (!navigator.onLine) {
     try {
-      const payload = {
+      const changeAmt = paymentMode === 'cash' ? parseFloat((Number(cash) - total).toFixed(2)) : 0
+      const localOrder = {
+        localId,
+        _id: localId,
         items: cart.map((item) => ({
-          productId: item.isCustom ? undefined : item._id,
-          name:      item.name,
-          price:     item.price,
-          quantity:  item.quantity,
-          isCustom:  item.isCustom || false,
+          name: item.name, price: item.price,
+          quantity: item.quantity, subtotal: parseFloat((item.price * item.quantity).toFixed(2)),
+          isCustom: item.isCustom || false,
         })),
-        ...(paymentMode === 'split'
-          ? { payments: splitPayments, cash: splitPayments.find((p) => p.method === 'cash')?.amount || 0 }
-          : { cash: Number(cash) }
-        ),
-        discount: discountType !== 'none' && discountValue
-          ? { type: discountType, value: parseFloat(discountValue) }
-          : null,
+        subtotal: cartSubtotal,
+        total,
+        cash:   paymentMode === 'cash' ? Number(cash) : 0,
+        change: changeAmt,
+        payments: paymentMode === 'split' ? splitPayments : [],
+        discount: { type: discountType !== 'none' ? discountType : null, value: parseFloat(discountValue) || 0, amount: discountAmount },
+        createdAt: new Date().toISOString(),
+        status: 'completed',
+        source: 'offline',
       }
-
-      const res = await orderApi.create(payload)
-      setLastOrder(res.data)
+      await enqueueOrder(payload)
+      await saveLocalOrder(localOrder)
+      await refreshCount()
+      setLastOrder(localOrder)
       setShowReceipt(true)
       clearCart()
       setCash('')
@@ -265,18 +296,42 @@ export default function POSPage() {
       setDiscountType('none')
       setDiscountValue('')
       setShowCartMobile(false)
-      loadProducts()
-      toast('Order complete! 🎉', 'success')
-      if (autoPrint) setTimeout(() => printReceipt(res.data, { paperWidth, autoPrint: true }), 500)
+      toast('Saved offline — will sync when online 📡', 'info')
+      if (autoPrint) setTimeout(() => printReceipt(localOrder, { paperWidth }), 500)
     } catch (err) {
-      const msg = err?.response?.data?.message || err.message || 'Checkout failed'
-      if (msg?.toLowerCase().includes('cash')) setCashError(msg)
-      toast(msg, 'error')
+      toast('Failed to save offline order', 'error')
     } finally {
       setCheckoutLoading(false)
     }
-  }, [cart, cash, total, paymentMode, splitPayments, splitValid, discountType, discountValue,
-      clearCart, loadProducts, autoPrint, paperWidth])
+    return
+  }
+
+  // ── ONLINE path ─────────────────────────────────────────────────────────
+  try {
+    const res = await orderApi.create({ ...payload, idempotencyKey: localId })
+    setLastOrder(res.data)
+    setShowReceipt(true)
+    clearCart()
+    setCash('')
+    setCashError('')
+    setPaymentMode('cash')
+    setSplitPayments([])
+    setSplitValid(false)
+    setDiscountType('none')
+    setDiscountValue('')
+    setShowCartMobile(false)
+    loadProducts()
+    toast('Order complete! 🎉', 'success')
+    if (autoPrint) setTimeout(() => printReceipt(res.data, { paperWidth, autoPrint: true }), 500)
+  } catch (err) {
+    const msg = err?.response?.data?.message || err.message || 'Checkout failed'
+    if (msg?.toLowerCase().includes('cash')) setCashError(msg)
+    toast(msg, 'error')
+  } finally {
+    setCheckoutLoading(false)
+  }
+}, [cart, cash, total, cartSubtotal, discountAmount, paymentMode, splitPayments, splitValid,
+    discountType, discountValue, clearCart, loadProducts, autoPrint, paperWidth, refreshCount])
 
   // ── Cart Panel ───────────────────────────────────────────────────────────
   const CartPanel = useCallback(() => (
