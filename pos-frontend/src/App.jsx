@@ -2,9 +2,11 @@ import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { ToastProvider } from './components/ui/Toast'
 import { AuthProvider, useAuth } from './context/AuthContext'
+import { SyncProvider } from './context/SyncContext'
 import ProtectedRoute from './components/ProtectedRoute'
 import Layout from './components/Layout'
 import { PageLoader } from './components/ui/Skeleton'
+import PWAInstallBanner from './components/PWAInstallBanner'
 
 const LoginPage      = lazy(() => import('./pages/LoginPage'))
 const POSPage        = lazy(() => import('./pages/POSPage'))
@@ -13,7 +15,10 @@ const SalesPage      = lazy(() => import('./pages/SalesPage'))
 const ExpensesPage   = lazy(() => import('./pages/ExpensesPage'))
 const UtangPage      = lazy(() => import('./pages/UtangPage'))
 const CashDrawerPage = lazy(() => import('./pages/CashDrawerPage'))
-const SupplierPage = lazy(() => import('./pages/SupplierPage'))
+const SupplierPage   = lazy(() => import('./pages/SupplierPage'))
+const UsersPage      = lazy(() => import('./pages/UsersPage'))
+const BackupPage     = lazy(() => import('./pages/BackupPage'))
+const AuditLogPage   = lazy(() => import('./pages/AuditLogPage'))
 
 function AppRoutes() {
   const { loading } = useAuth()
@@ -22,46 +27,40 @@ function AppRoutes() {
   return (
     <Suspense fallback={<PageLoader />}>
       <Routes>
-        {/* Public */}
         <Route path="/login" element={<LoginPage />} />
 
         {/* Cashier + Admin */}
         <Route path="/" element={
-          <ProtectedRoute>
-            <Layout><Suspense fallback={<PageLoader />}><POSPage /></Suspense></Layout>
-          </ProtectedRoute>
+          <ProtectedRoute><Layout><POSPage /></Layout></ProtectedRoute>
         } />
         <Route path="/utang" element={
-          <ProtectedRoute>
-            <Layout><Suspense fallback={<PageLoader />}><UtangPage /></Suspense></Layout>
-          </ProtectedRoute>
+          <ProtectedRoute><Layout><UtangPage /></Layout></ProtectedRoute>
         } />
 
         {/* Admin only */}
         <Route path="/products" element={
-          <ProtectedRoute adminOnly>
-            <Layout><Suspense fallback={<PageLoader />}><ProductsPage /></Suspense></Layout>
-          </ProtectedRoute>
+          <ProtectedRoute adminOnly><Layout><ProductsPage /></Layout></ProtectedRoute>
         } />
         <Route path="/sales" element={
-          <ProtectedRoute adminOnly>
-            <Layout><Suspense fallback={<PageLoader />}><SalesPage /></Suspense></Layout>
-          </ProtectedRoute>
+          <ProtectedRoute adminOnly><Layout><SalesPage /></Layout></ProtectedRoute>
         } />
         <Route path="/expenses" element={
-          <ProtectedRoute adminOnly>
-            <Layout><Suspense fallback={<PageLoader />}><ExpensesPage /></Suspense></Layout>
-          </ProtectedRoute>
+          <ProtectedRoute adminOnly><Layout><ExpensesPage /></Layout></ProtectedRoute>
         } />
         <Route path="/cash-drawer" element={
-          <ProtectedRoute adminOnly>
-            <Layout><Suspense fallback={<PageLoader />}><CashDrawerPage /></Suspense></Layout>
-          </ProtectedRoute>
+          <ProtectedRoute adminOnly><Layout><CashDrawerPage /></Layout></ProtectedRoute>
         } />
         <Route path="/suppliers" element={
-          <ProtectedRoute adminOnly>
-            <Layout><Suspense fallback={<PageLoader />}><SupplierPage /></Suspense></Layout>
-            </ProtectedRoute>
+          <ProtectedRoute adminOnly><Layout><SupplierPage /></Layout></ProtectedRoute>
+        } />
+        <Route path="/users" element={
+          <ProtectedRoute adminOnly><Layout><UsersPage /></Layout></ProtectedRoute>
+        } />
+        <Route path="/backup" element={
+          <ProtectedRoute adminOnly><Layout><BackupPage /></Layout></ProtectedRoute>
+        } />
+        <Route path="/audit-log" element={
+          <ProtectedRoute adminOnly><Layout><AuditLogPage /></Layout></ProtectedRoute>
         } />
 
         <Route path="*" element={<Navigate to="/" replace />} />
@@ -74,9 +73,12 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <ToastProvider>
-          <AppRoutes />
-        </ToastProvider>
+        <SyncProvider>
+          <ToastProvider>
+            <AppRoutes />
+            <PWAInstallBanner />
+          </ToastProvider>
+        </SyncProvider>
       </AuthProvider>
     </BrowserRouter>
   )
