@@ -124,6 +124,10 @@ const logServerError = (req, error) => {
   })
 }
 
+const logSecurityEvent = (event, details = {}) => {
+  writeLog('INFO', event, details)
+}
+
 // ── Request logging middleware (attach to app for all routes) ─────────────
 // Logs method, path, status, and response time for every request
 const requestLogger = (req, res, next) => {
@@ -183,6 +187,7 @@ module.exports = {
   logAuthFailure,
   logSuspiciousRequest,
   logServerError,
+  logSecurityEvent,
   requestLogger,
   detectSuspiciousRequests,
 }

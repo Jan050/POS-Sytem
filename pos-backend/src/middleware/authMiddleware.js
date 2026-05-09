@@ -42,7 +42,9 @@ const protect = async (req, res, next) => {
 
     // Re-verify user still exists and is active — catches deleted/deactivated users
     // even if their token hasn't expired yet
-    const user = await User.findById(decoded.id).select('_id username role isActive').lean()
+    const user = await User.findById(decoded.id)
+      .select('_id username role isActive tokenVersion passwordChangedAt')
+      .lean()
 
     if (!user || !user.isActive) {
       logAuthFailure(req, 'user_not_found_or_deactivated')
@@ -51,6 +53,27 @@ const protect = async (req, res, next) => {
         message: 'Session invalid. Please log in again.',
         code: 'USER_NOT_FOUND',
       })
+    }
+
+    if ((decoded.tokenVersion ?? 0) !== (user.tokenVersion ?? 0)) {
+      logAuthFailure(req, 'token_version_mismatch')
+      return res.status(401).json({
+        success: false,
+        message: 'Session invalid. Please log in again.',
+        code: 'TOKEN_REVOKED',
+      })
+    }
+
+    if (user.passwordChangedAt && decoded.iat) {
+      const passwordChangedAtSec = Math.floor(new Date(user.passwordChangedAt).getTime() / 1000)
+      if (decoded.iat < passwordChangedAtSec) {
+        logAuthFailure(req, 'token_issued_before_password_change')
+        return res.status(401).json({
+          success: false,
+          message: 'Session invalid. Please log in again.',
+          code: 'TOKEN_STALE',
+        })
+      }
     }
 
     req.user = { id: user._id, username: user.username, role: user.role }

@@ -8,15 +8,20 @@ export default function BackupPage() {
   const fileRef = useRef(null)
 
   const [exporting,  setExporting]  = useState(false)
+  const [exportPassword, setExportPassword] = useState('')
   const [restoring,  setRestoring]  = useState(false)
   const [restoreFile,setRestoreFile]= useState(null)
   const [preview,    setPreview]    = useState(null)
   const [restoreResult, setRestoreResult] = useState(null)
 
   const handleExport = async () => {
+    if (!exportPassword) {
+      toast('Enter your current password to export backup', 'error')
+      return
+    }
     setExporting(true)
     try {
-      const data = await backupApi.export()
+      const data = await backupApi.export({ currentPassword: exportPassword })
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
       const url  = URL.createObjectURL(blob)
       const a    = document.createElement('a')
@@ -24,6 +29,7 @@ export default function BackupPage() {
       a.download = `tindahan-backup-${new Date().toISOString().split('T')[0]}.json`
       a.click()
       URL.revokeObjectURL(url)
+      setExportPassword('')
       toast('Backup downloaded ✅', 'success')
     } catch (err) {
       toast(err.message || 'Export failed', 'error')
@@ -101,6 +107,17 @@ export default function BackupPage() {
                   </span>
                 ) : '📥 Download Backup'}
               </button>
+              <div className="mt-3">
+                <label className="text-xs text-slate-400 block mb-1.5">Re-enter current password</label>
+                <input
+                  type="password"
+                  value={exportPassword}
+                  onChange={(e) => setExportPassword(e.target.value)}
+                  autoComplete="current-password"
+                  placeholder="Required for secure export"
+                  className="input px-3 py-2.5 max-w-sm"
+                />
+              </div>
             </div>
           </div>
         </div>

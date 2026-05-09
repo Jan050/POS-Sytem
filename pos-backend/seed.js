@@ -40,6 +40,14 @@ const sampleProducts = [
 
 const seedDB = async () => {
   try {
+    const adminUsername = process.env.SEED_ADMIN_USERNAME?.toLowerCase().trim();
+    const adminPassword = process.env.SEED_ADMIN_PASSWORD;
+    const skipUsers = String(process.env.SEED_SKIP_USERS || "").toLowerCase() === "true";
+
+    if (!skipUsers && (!adminUsername || !adminPassword || adminPassword.length < 12)) {
+      throw new Error("Secure seed admin credentials are required. Set SEED_ADMIN_USERNAME and SEED_ADMIN_PASSWORD (min 12 chars), or set SEED_SKIP_USERS=true.");
+    }
+
     await mongoose.connect(process.env.MONGO_URI);
     console.log("✅ Connected to MongoDB");
 
@@ -51,12 +59,18 @@ const seedDB = async () => {
     const products = await Product.insertMany(sampleProducts);
     console.log(`🌱 Seeded ${products.length} products`);
 
-    // Default users
-    await User.create([
-      { username: "admin",   password: "admin123",   role: "admin",   displayName: "Store Admin" },
-      { username: "cashier", password: "cashier123", role: "cashier", displayName: "Cashier 1"   },
-    ]);
-    console.log("👤 Created users: admin / admin123 | cashier / cashier123");
+    if (!skipUsers) {
+      await User.create({
+        username: adminUsername,
+        password: adminPassword,
+        role: "admin",
+        displayName: "Store Admin",
+        requirePasswordChange: true,
+      });
+      console.log(`👤 Created secure admin user: ${adminUsername} (must change password on first login)`);
+    } else {
+      console.log("👤 Skipped user seeding (SEED_SKIP_USERS=true)");
+    }
 
     // Sample orders
     const p1 = products[0]; const p2 = products[6]; const p3 = products[11];

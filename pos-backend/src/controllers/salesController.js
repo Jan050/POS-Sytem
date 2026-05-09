@@ -75,7 +75,8 @@ const getTodaySales = async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error('[sales/getTodaySales] Unexpected error:', error);
+    res.status(500).json({ success: false, message: "Something went wrong" });
   }
 };
 
@@ -133,7 +134,8 @@ const getSalesSummary = async (req, res) => {
       })),
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error('[sales/getSalesSummary] Unexpected error:', error);
+    res.status(500).json({ success: false, message: "Something went wrong" });
   }
 };
 
@@ -175,7 +177,8 @@ const getBestSellers = async (req, res) => {
       })),
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error('[sales/getBestSellers] Unexpected error:', error);
+    res.status(500).json({ success: false, message: "Something went wrong" });
   }
 };
 
@@ -214,7 +217,8 @@ const getHourlySales = async (req, res) => {
 
     res.status(200).json({ success: true, date: dateStr, data: hours });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error('[sales/getHourlySales] Unexpected error:', error);
+    res.status(500).json({ success: false, message: "Something went wrong" });
   }
 };
 
@@ -289,7 +293,8 @@ const getMonthlyComparison = async (req, res) => {
 
     res.status(200).json({ success: true, data: results });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error('[sales/getMonthlyComparison] Unexpected error:', error);
+    res.status(500).json({ success: false, message: "Something went wrong" });
   }
 };
 
@@ -333,7 +338,8 @@ const getDeadStock = async (req, res) => {
       data:            dead,
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error('[sales/getDeadStock] Unexpected error:', error);
+    res.status(500).json({ success: false, message: "Something went wrong" });
   }
 };
 
@@ -415,7 +421,8 @@ const getProfitMargins = async (req, res) => {
       data: enriched,
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error('[sales/getProfitMargins] Unexpected error:', error);
+    res.status(500).json({ success: false, message: "Something went wrong" });
   }
 };
 

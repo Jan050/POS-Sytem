@@ -11,7 +11,7 @@ import { useAuth } from '../context/AuthContext'
  *   <ProtectedRoute adminOnly><AdminPage /></ProtectedRoute>
  */
 const ProtectedRoute = ({ children, adminOnly = false }) => {
-  const { isLoggedIn, isAdmin, loading } = useAuth()
+  const { isLoggedIn, isAdmin, loading, user } = useAuth()
   const location = useLocation()
 
   // While verifying token on initial load, show nothing (avoids flash)
@@ -29,6 +29,10 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
   if (!isLoggedIn) {
     // Preserve intended destination for post-login redirect
     return <Navigate to="/login" state={{ from: location }} replace />
+  }
+
+  if (user?.requirePasswordChange && location.pathname !== '/change-password') {
+    return <Navigate to="/change-password" replace />
   }
 
   if (adminOnly && !isAdmin) {

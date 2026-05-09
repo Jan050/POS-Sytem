@@ -25,8 +25,17 @@ api.interceptors.response.use(
     const message = err.response?.data?.message || err.message || 'Network error'
     const code    = err.response?.data?.code
 
-    // 401: token expired/invalid → clear session and redirect to login
-    if (status === 401) {
+    // 401 with token/session-specific error code: clear session and redirect.
+    const shouldResetSession = status === 401 && [
+      'NO_TOKEN',
+      'TOKEN_EXPIRED',
+      'INVALID_TOKEN',
+      'TOKEN_REVOKED',
+      'TOKEN_STALE',
+      'USER_NOT_FOUND',
+    ].includes(code)
+
+    if (shouldResetSession) {
       localStorage.removeItem(TOKEN_KEY)
       localStorage.removeItem('pos_user')
       // Only redirect if not already on login page
@@ -145,7 +154,7 @@ export const supplierApi = {
 // BACKUP & RESTORE
 // ════════════════════════════════════════
 export const backupApi = {
-  export:          ()     => api.get('/backup/export'),
+  export:          (data) => api.post('/backup/export', data),
   restoreProducts: (data) => api.post('/backup/restore-products', data),
 }
 

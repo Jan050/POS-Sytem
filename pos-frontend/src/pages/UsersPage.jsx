@@ -28,7 +28,7 @@ export default function UsersPage() {
 
   const handleCreate = async () => {
     if (!form.username.trim()) return setFormError('Username is required')
-    if (!form.password || form.password.length < 6) return setFormError('Password must be at least 6 characters')
+    if (!form.password || form.password.length < 8) return setFormError('Password must be at least 8 characters')
     if (!form.displayName.trim()) return setFormError('Display name is required')
     setSaving(true); setFormError('')
     try {
@@ -167,7 +167,7 @@ export default function UsersPage() {
             <label className="text-xs text-slate-400 block mb-1.5">Password *</label>
             <input type="password" value={form.password}
               onChange={e => setForm(p => ({ ...p, password: e.target.value }))}
-              placeholder="Minimum 6 characters" className="input px-3 py-2.5" />
+              placeholder="Minimum 8 characters" className="input px-3 py-2.5" />
           </div>
 
           <div>

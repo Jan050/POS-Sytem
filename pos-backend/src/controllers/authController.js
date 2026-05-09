@@ -33,6 +33,7 @@ const signToken = (user) =>
       id:       user._id,
       role:     user.role,
       username: user.username,
+      tokenVersion: user.tokenVersion || 0,
       // Note: don't add password, email, or other sensitive fields to payload
       // JWT payload is base64 encoded, NOT encrypted — it's readable to anyone
     },
@@ -91,6 +92,7 @@ const login = async (req, res) => {
         username:    user.username,
         displayName: user.displayName || user.username,
         role:        user.role,
+        requirePasswordChange: !!user.requirePasswordChange,
         // never include: password, __v, internal flags
       },
     })
@@ -120,6 +122,7 @@ const getMe = async (req, res) => {
         role:        user.role,
         lastLogin:   user.lastLogin,
         createdAt:   user.createdAt,
+        requirePasswordChange: !!user.requirePasswordChange,
       },
     })
   } catch {
@@ -148,10 +151,15 @@ const changePassword = async (req, res) => {
     }
 
     user.password = newPassword  // Schema pre-save hook will hash this
+    user.requirePasswordChange = false
     await user.save()
 
     console.info(`[AUTH] Password changed for user: ${user.username}`)
-    res.status(200).json({ success: true, message: 'Password changed successfully' })
+    res.status(200).json({
+      success: true,
+      message: 'Password changed successfully. Please log in again.',
+      forceRelogin: true,
+    })
   } catch {
     res.status(500).json({ success: false, message: 'Failed to change password' })
   }
@@ -193,6 +201,7 @@ const createUser = async (req, res) => {
       password,                                      // Hashed by pre-save hook
       role:        role || 'cashier',
       displayName: displayName?.trim() || username,
+      requirePasswordChange: true,
     })
 
     console.info(`[AUTH] New user created: ${user.username} (${user.role}) by admin: ${req.user.username}`)

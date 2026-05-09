@@ -30,6 +30,10 @@ export default function LoginPage() {
     setLoading(true)
     try {
       const res = await login(form.username.trim(), form.password)
+      if (res.user?.requirePasswordChange) {
+        navigate('/change-password', { replace: true })
+        return
+      }
       // getSafeRedirect prevents open redirect via crafted ?from= URLs
       const destination = res.user.role === 'cashier' ? '/' : getSafeRedirect(from)
       navigate(destination, { replace: true })
@@ -89,7 +93,7 @@ export default function LoginPage() {
                   autoFocus
                   value={form.username}
                   onChange={handleChange}
-                  placeholder="admin"
+                  placeholder="Enter username"
                   className="input pl-9 py-3"
                 />
               </div>
@@ -148,15 +152,6 @@ export default function LoginPage() {
               ) : 'Sign In'}
             </button>
           </form>
-        </div>
-
-        {/* Demo credentials hint */}
-        <div className="mt-4 text-center">
-          <p className="text-xs text-slate-600">
-            Demo: <span className="text-slate-500 font-mono">admin / admin123</span>
-            {' '}or{' '}
-            <span className="text-slate-500 font-mono">cashier / cashier123</span>
-          </p>
         </div>
       </div>
     </div>

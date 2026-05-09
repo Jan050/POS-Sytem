@@ -19,6 +19,7 @@ const SupplierPage   = lazy(() => import('./pages/SupplierPage'))
 const UsersPage      = lazy(() => import('./pages/UsersPage'))
 const BackupPage     = lazy(() => import('./pages/BackupPage'))
 const AuditLogPage   = lazy(() => import('./pages/AuditLogPage'))
+const ChangePasswordPage = lazy(() => import('./pages/ChangePasswordPage'))
 
 function AppRoutes() {
   const { loading } = useAuth()
@@ -28,6 +29,9 @@ function AppRoutes() {
     <Suspense fallback={<PageLoader />}>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/change-password" element={
+          <ProtectedRoute><ChangePasswordPage /></ProtectedRoute>
+        } />
 
         {/* Cashier + Admin */}
         <Route path="/" element={

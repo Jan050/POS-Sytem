@@ -2,7 +2,7 @@ const express = require('express')
 const router  = express.Router()
 const { login, getMe, changePassword, getUsers, createUser } = require('../controllers/authController')
 const { protect, requireAdmin } = require('../middleware/authMiddleware')
-const { loginLimiter }  = require('../middleware/rateLimiter')
+const { loginLimiter, passwordChangeLimiter }  = require('../middleware/rateLimiter')
 const {
   validateLogin,
   validateCreateUser,
@@ -18,7 +18,7 @@ router.post('/login', loginLimiter, validateLogin, login)
 router.get('/me', protect, getMe)
 
 // POST /api/auth/change-password
-router.post('/change-password', protect, validateChangePassword, changePassword)
+router.post('/change-password', protect, passwordChangeLimiter, validateChangePassword, changePassword)
 
 // GET/POST /api/auth/users (admin only)
 router.get('/users',  protect, requireAdmin, getUsers)

@@ -55,7 +55,7 @@ const validateCreateUser = [
 
   body('password')
     .notEmpty().withMessage('Password is required')
-    .isLength({ min: 6, max: 100 }).withMessage('Password must be at least 6 characters'),
+    .isLength({ min: 8, max: 100 }).withMessage('Password must be at least 8 characters'),
 
   body('role')
     .optional()
@@ -78,7 +78,7 @@ const validateChangePassword = [
 
   body('newPassword')
     .notEmpty().withMessage('New password is required')
-    .isLength({ min: 6, max: 100 }).withMessage('New password must be at least 6 characters'),
+    .isLength({ min: 8, max: 100 }).withMessage('New password must be at least 8 characters'),
 
   handleValidation,
 ]

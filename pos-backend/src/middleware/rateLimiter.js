@@ -57,4 +57,17 @@ const writeLimiter = rateLimit({
   },
 })
 
-module.exports = { loginLimiter, apiLimiter, writeLimiter }
+// ── 4. Password change limiter — STRICT IP + user key ─────────────────────
+const passwordChangeLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => `${rateLimit.ipKeyGenerator(req.ip)}:${req.user?.id || 'anonymous'}`,
+  handler: (req, res) => {
+    console.warn(`[SECURITY] Password change rate limit hit — IP: ${req.ip}, user: ${req.user?.id || 'unknown'}`)
+    limitReachedHandler(req, res)
+  },
+})
+
+module.exports = { loginLimiter, apiLimiter, writeLimiter, passwordChangeLimiter }

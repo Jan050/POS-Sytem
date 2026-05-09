@@ -16,7 +16,7 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: [true, "Password is required"],
-      minlength: [6, "Password must be at least 6 characters"],
+      minlength: [8, "Password must be at least 8 characters"],
       select: false, // Never returned in queries by default
     },
     role: {
@@ -37,6 +37,18 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    passwordChangedAt: {
+      type: Date,
+      default: Date.now,
+    },
+    tokenVersion: {
+      type: Number,
+      default: 0,
+    },
+    requirePasswordChange: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );
@@ -46,6 +58,10 @@ userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
+  this.passwordChangedAt = new Date();
+  if (!this.isNew) {
+    this.tokenVersion = (this.tokenVersion || 0) + 1;
+  }
   next();
 });
 
