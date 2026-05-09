@@ -17,7 +17,6 @@ import { enqueueOrder, saveLocalOrder } from '../utils/offlineDB'
 import { useSync } from '../context/SyncContext'
 
 const QUICK_ITEM_KEY = 'pos_quick_items'
-const { refreshCount } = useSync()
 const loadQuickIds = () => { try { return JSON.parse(localStorage.getItem(QUICK_ITEM_KEY)) || [] } catch { return [] } }
 const saveQuickIds = (ids) => localStorage.setItem(QUICK_ITEM_KEY, JSON.stringify(ids))
 
@@ -33,6 +32,7 @@ const validateCashInput = (rawCash, total) => {
 
 export default function POSPage() {
   const toast = useToast()
+  const { refreshCount } = useSync()
   const {
     cart, total: cartSubtotal, itemCount,
     addToCart, removeFromCart, incrementQty, decrementQty, overridePrice, clearCart
