@@ -104,18 +104,23 @@ export default function UsersPage() {
                   {/* Avatar */}
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0
                     ${user.role === 'admin' ? 'bg-purple-500/20 text-purple-300' : 'bg-blue-500/20 text-blue-300'}`}>
-                    {user.displayName?.[0]?.toUpperCase() || user.username[0].toUpperCase()}
+                    {user.displayName?.[0]?.toUpperCase() ||
+                      user.username?.[0]?.toUpperCase() ||
+                      '?'
+                    }                    
                   </div>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-medium text-slate-200">{user.displayName || user.username}</p>
+                      <p className="font-medium text-slate-200">{user.displayName || user.username || 'Unnamed User'}</p>
                       <span className={`badge text-xs ${roleColor(user.role)}`}>{user.role}</span>
                       {!user.isActive && (
                         <span className="badge bg-red-500/20 text-red-400 border border-red-500/30">Inactive</span>
                       )}
                     </div>
-                    <p className="text-xs text-slate-500 mt-0.5 font-mono">@{user.username}</p>
+                    <p className="text-xs text-slate-500 mt-0.5 font-mono">
+                      @{user.username || 'unknown'}
+                    </p>
                     {user.lastLogin && (
                       <p className="text-xs text-slate-600 mt-0.5">
                         Last login: {formatDateTime(user.lastLogin)}
