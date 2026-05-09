@@ -103,11 +103,10 @@ export default function UsersPage() {
                 <div key={user._id} className="flex items-center gap-4 px-4 py-4 hover:bg-surface-700/30">
                   {/* Avatar */}
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0
-                    ${user.role === 'admin' ? 'bg-purple-500/20 text-purple-300' : 'bg-blue-500/20 text-blue-300'}`}>
-                    {user.displayName?.[0]?.toUpperCase() ||
-                      user.username?.[0]?.toUpperCase() ||
-                      '?'
-                    }                    
+                  ${user.role === 'admin' ? 'bg-purple-500/20 text-purple-300' : 'bg-blue-500/20 text-blue-300'}`}>
+                  {user.displayName?.[0]?.toUpperCase() ??
+                   user.username?.[0]?.toUpperCase() ??
+                   '?'}                    
                   </div>
 
                   <div className="flex-1 min-w-0">
