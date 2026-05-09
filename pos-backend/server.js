@@ -55,6 +55,8 @@ app.use('/api/cash-drawer', require('./src/routes/cashDrawerRoutes'))
 app.use('/api/utang',       require('./src/routes/utangRoutes'))
 app.use('/api/hold-orders', require('./src/routes/holdOrderRoutes'))
 app.use('/api/suppliers', require('./src/routes/supplierRoutes'))
+app.use('/api/backup', require('./src/routes/backupRoutes'))
+app.use('/api/audit',  require('./src/routes/auditRoutes'))
 
 app.get('/', (req, res) => {
   res.json({ message: '🏪 Sari-Sari Store POS API', status: 'running' })
